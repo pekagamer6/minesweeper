@@ -5,143 +5,188 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Infinite Minesweeper</title>
   <style>
-    body { background: #121212; color: #aaa; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; }
-    h1 { color: #fff; }
-    #game { margin: 20px auto; display: inline-block; }
-    table { border-collapse: collapse; margin: 20px auto; background: #333; }
-    td { width: 30px; height: 30px; border: 1px solid #555; text-align: center; font-weight: bold; cursor: pointer; background: #222; }
-    td.revealed { background: #444; }
-    td.flag { background: #222 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAADqAAAAA7pVsrAAAAAElFTkSuQmCC') no-repeat center; }
-    td.mine { background: #f00; color: #fff; }
-    .num1 { color: #00f; }
-    .num2 { color: #0f0; }
-    .num3 { color: #f00; }
-    .num4 { color: #00c; }
-    .num5 { color: #c00; }
-    .num6 { color: #0cc; }
-    .num7 { color: #000; }
-    .num8 { color: #888; }
-    #info { margin: 10px; font-size: 1.2em; }
-    button { padding: 10px 20px; margin: 10px; font-size: 1em; cursor: pointer; }
+    body { margin: 0; background: #0d1421; color: #e2e8f0; font-family: Arial, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+    header { background: rgba(13,20,33,0.9); padding: 1rem; text-align: center; font-size: 1.8rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+    .icon { cursor: pointer; font-size: 1.5rem; padding: 0 1rem; }
+    #statsBar { display: flex; justify-content: center; gap: 1rem; background: rgba(15,22,35,0.95); padding: 0.8rem; border-radius: 2rem; margin: 1rem auto; width: fit-content; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .stat { display: flex; align-items: center; gap: 0.5rem; background: rgba(30,41,59,0.8); padding: 0.5rem 1rem; border-radius: 2rem; }
+    .level { color: #34d399; }
+    .mines { color: #f87171; }
+    .flags { color: #fbbf24; }
+    .time { color: #60a5fa; }
+    #boardContainer { flex: 1; display: flex; justify-content: center; align-items: center; }
+    #board { display: grid; gap: 6px; padding: 1.5rem; background: rgba(15,22,35,0.8); border-radius: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .cell { width: 40px; height: 40px; background: linear-gradient(145deg, #2d3748, #1a202c); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .cell:hover:not(.revealed) { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(96,165,250,0.3); }
+    .revealed { background: #1e293b !important; box-shadow: inset 0 4px 12px rgba(0,0,0,0.5); }
+    .flagged::before { content: '🚩'; }
+    .mine { background: #ef4444 !important; }
+    #hint { text-align: center; padding-bottom: 1rem; color: #94a3b8; }
   </style>
 </head>
 <body>
-  <h1>Infinite Minesweeper</h1>
-  <div id="info">Level: <span id="level">1</span> | Mines: <span id="mines">10</span> | Flags: <span id="flags">0</span> | Time: <span id="timer">0</span>s</div>
-  <div id="game"><table id="board"></table></div>
-  <button onclick="newGame()">New Game</button>
-  <p>Left click to reveal • Right click to flag</p>
+  <header>
+    <div class="icon">🏠</div>
+    <div>MINESWEEPER</div>
+    <div class="icon">↺</div>
+    <div class="icon">📊</div>
+    <div class="icon">⚙</div>
+  </header>
+
+  <div id="statsBar">
+    <div class="stat level">🏆 LEVEL <span id="level">1</span></div>
+    <div class="stat mines">💣 MINES <span id="mines">4</span></div>
+    <div class="stat flags">🚩 FLAGS <span id="flags">0</span></div>
+    <div class="stat time">⏱ TIME <span id="timer">00:00</span></div>
+  </div>
+
+  <div id="boardContainer">
+    <div id="board"></div>
+  </div>
+
+  <p id="hint">Left click: reveal • Right click: flag</p>
 
   <script>
-    let size = 9;
-    let mines = 10;
-    let level = 1;
+    let rows = 10, cols = 10, totalMines = 4;
     let board = [];
-    let revealed = 0;
-    let flags = 0;
     let gameOver = false;
+    let firstClick = true;
     let timer = 0;
-    let interval;
+    let timerInterval;
+    let flags = 0;
+    let revealed = 0;
 
-    function newGame() {
-      level = 1;
-      size = 9;
-      mines = 10;
-      createBoard();
-      updateInfo();
-    }
+    const boardEl = document.getElementById('board');
+    const levelEl = document.getElementById('level');
+    const minesEl = document.getElementById('mines');
+    const flagsEl = document.getElementById('flags');
+    const timerEl = document.getElementById('timer');
 
-    function createBoard() {
-      gameOver = false;
-      revealed = 0;
+    function initGame() {
+      boardEl.innerHTML = '';
+      board = [];
       flags = 0;
+      revealed = 0;
+      gameOver = false;
+      firstClick = true;
       timer = 0;
-      clearInterval(interval);
-      interval = setInterval(() => timer++, 1000);
-      const tb = document.getElementById('board');
-      tb.innerHTML = '';
-      board = Array.from({length: size}, () => Array(size).fill(0));
-      for (let i = 0; i < mines; i++) {
-        let r, c;
-        do {
-          r = Math.floor(Math.random() * size);
-          c = Math.floor(Math.random() * size);
-        } while (board[r][c] === 'M');
-        board[r][c] = 'M';
-        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-          const nr = r + dr, nc = c + dc;
-          if (nr >= 0 && nr < size && nc >= 0 && nc < size && board[nr][nc] !== 'M') board[nr][nc]++;
+      timerEl.textContent = '00:00';
+      clearInterval(timerInterval);
+      boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+      for (let r = 0; r < rows; r++) {
+        board[r] = [];
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+          cell.addEventListener('click', leftClick);
+          cell.addEventListener('contextmenu', rightClick);
+          boardEl.appendChild(cell);
+          board[r][c] = { mine: false, revealed: false, flagged: false, adj: 0 };
         }
       }
-      for (let r = 0; r < size; r++) {
-        const tr = tb.insertRow();
-        for (let c = 0; c < size; c++) {
-          const td = tr.insertCell();
-          td.onmousedown = e => handleClick(r, c, e.button);
-          td.oncontextmenu = e => e.preventDefault();
-        }
-      }
-      updateInfo();
+      minesEl.textContent = totalMines;
+      flagsEl.textContent = flags;
     }
 
-    function handleClick(r, c, button) {
+    function leftClick(e) {
       if (gameOver) return;
-      const td = document.querySelector(`#board tr:nth-child(${r+1}) td:nth-child(${c+1})`);
-      if (td.classList.contains('revealed') || td.classList.contains('flag')) return;
-      if (button === 2) { // Right click
-        td.classList.toggle('flag');
-        flags += td.classList.contains('flag') ? 1 : -1;
-        updateInfo();
-        checkWin();
-        return;
+      const r = +e.target.dataset.r;
+      const c = +e.target.dataset.c;
+      if (board[r][c].flagged || board[r][c].revealed) return;
+      if (firstClick) {
+        firstClick = false;
+        placeMines(r, c);
+        startTimer();
       }
-      // Left click
-      td.classList.add('revealed');
-      revealed++;
-      if (board[r][c] === 'M') {
-        td.classList.add('mine');
-        td.textContent = '💣';
+      if (board[r][c].mine) {
         gameOver = true;
-        clearInterval(interval);
-        alert('Game Over!');
+        e.target.classList.add('mine');
+        revealAll();
+        boardEl.classList.add('shake');
         return;
       }
-      if (board[r][c] > 0) td.textContent = board[r][c];
-      td.classList.add(`num${board[r][c]}`);
-      if (board[r][c] === 0) floodReveal(r, c);
+      floodReveal(r, c);
       checkWin();
     }
 
-    function floodReveal(r, c) {
-      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-        const nr = r + dr, nc = c + dc;
-        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
-          const td = document.querySelector(`#board tr:nth-child(${nr+1}) td:nth-child(${nc+1})`);
-          if (td && !td.classList.contains('revealed') && !td.classList.contains('flag')) handleClick(nr, nc, 0);
+    function rightClick(e) {
+      e.preventDefault();
+      if (gameOver || firstClick) return;
+      const r = +e.target.dataset.r;
+      const c = +e.target.dataset.c;
+      if (board[r][c].revealed) return;
+      board[r][c].flagged = !board[r][c].flagged;
+      e.target.classList.toggle('flagged');
+      flags += board[r][c].flagged ? 1 : -1;
+      flagsEl.textContent = flags;
+      checkWin();
+    }
+
+    function placeMines(exR, exC) {
+      let placed = 0;
+      while (placed < totalMines) {
+        const r = Math.floor(Math.random() * rows);
+        const c = Math.floor(Math.random() * cols);
+        if (board[r][c].mine || (r === exR && c === exC)) continue;
+        board[r][c].mine = true;
+        placed++;
+      }
+      calcAdj();
+    }
+
+    function calcAdj() {
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!board[r][c].mine) {
+        let count = 0;
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc].mine) count++;
         }
+        board[r][c].adj = count;
+      }
+    }
+
+    function floodReveal(r, c) {
+      if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c].revealed || board[r][c].flagged) return;
+      board[r][c].revealed = true;
+      revealed++;
+      const cell = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+      cell.classList.add('revealed');
+      if (board[r][c].adj > 0) {
+        cell.textContent = board[r][c].adj;
+        cell.classList.add(`num${board[r][c].adj}`);
+      } else {
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) floodReveal(r + dr, c + dc);
+      }
+    }
+
+    function revealAll() {
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (board[r][c].mine) {
+        const cell = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+        cell.classList.add('mine');
+        cell.textContent = '💣';
       }
     }
 
     function checkWin() {
-      if (revealed + mines === size * size) {
+      if (revealed + totalMines === rows * cols) {
         gameOver = true;
-        clearInterval(interval);
-        alert('You Win! Proceeding to next level...');
-        level++;
-        size += 2; // Increase size
-        mines += Math.floor(level * 2); // Increase mines
-        createBoard();
+        clearInterval(timerInterval);
+        alert('Win!');
       }
     }
 
-    function updateInfo() {
-      document.getElementById('level').textContent = level;
-      document.getElementById('mines').textContent = mines;
-      document.getElementById('flags').textContent = flags;
-      document.getElementById('timer').textContent = timer;
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timer++;
+        const m = String(Math.floor(timer / 60)).padStart(2, '0');
+        const s = String(timer % 60).padStart(2, '0');
+        timerEl.textContent = `${m}:${s}`;
+      }, 1000);
     }
 
-    newGame();
+    initGame();
   </script>
 </body>
 </html>
