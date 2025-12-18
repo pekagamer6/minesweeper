@@ -3,496 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minesweeper Infinite Edition</title>
+  <title>Minesweeper</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       height: 100vh;
-      background: linear-gradient(135deg, #0a0e17 0%, #1a1f2e 50%, #16213e 100%);
+      background: #0d1421;
       color: #e2e8f0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
       overflow: hidden;
     }
-    #gameContainer {
-      text-align: center;
+    header {
       width: 100%;
-      max-width: 1000px;
-      padding: 20px;
+      padding: 1rem;
+      background: rgba(13,20,33,0.9);
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
     }
-    h1 {
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      font-weight: 900;
-      background: linear-gradient(45deg, #00d4ff, #5a67d8, #00bfff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 2rem;
-      letter-spacing: -0.02em;
-    }
-    .menu-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      max-width: 800px;
-      margin: 0 auto 2rem;
-    }
-    .menu-button {
-      background: linear-gradient(145deg, #1e293b, #334155);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #e2e8f0;
-      padding: 1.2rem 2rem;
-      border-radius: 3rem;
-      cursor: pointer;
-      font-size: 1.1rem;
-      font-weight: 600;
-      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      backdrop-filter: blur(20px);
-    }
-    .menu-button:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 20px 50px rgba(0,212,255,0.3);
-      border-color: rgba(0,212,255,0.3);
-    }
-    #playBtn {
-      background: linear-gradient(145deg, #10b981, #047857) !important;
-      box-shadow: 0 10px 30px rgba(16,185,129,0.4) !important;
-    }
-    #playBtn:hover {
-      box-shadow: 0 20px 50px rgba(16,185,129,0.5) !important;
-    }
-    #hint {
-      color: #94a3b8;
-      font-size: 0.95rem;
-      margin-top: 1rem;
-    }
-    #gameScreen { display: none; }
-    #header {
+    .icon-btn { cursor: pointer; font-size: 1.4rem; padding: 0.5rem; }
+    #statsBar {
       display: flex;
       justify-content: center;
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      background: rgba(15,22,35,0.95);
+      padding: 0.8rem 1.5rem;
+      border-radius: 2rem;
+      margin: 1rem 0;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       flex-wrap: wrap;
     }
-    .stat {
-      background: linear-gradient(145deg, #1e293b, #334155);
-      border: 1px solid rgba(255,255,255,0.08);
-      padding: 0.8rem 1.2rem;
-      border-radius: 50px;
+    .stat-item {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-weight: 600;
-      font-size: 0.95rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      backdrop-filter: blur(10px);
-      min-width: 130px;
+      min-width: 120px;
+    }
+    .stat-icon { font-size: 1.4rem; }
+    .level-icon { color: #34d399; }
+    .mines-icon { color: #f87171; }
+    .flags-icon { color: #fbbf24; }
+    .time-icon { color: #60a5fa; }
+    #boardContainer {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
     }
     #board {
       display: grid;
       gap: 6px;
-      margin: 0 auto;
       padding: 1.5rem;
-      background: linear-gradient(145deg, #0f172a, #1e293b);
-      border-radius: 2.5rem;
-      box-shadow: 0 25px 70px rgba(0,0,0,0.6);
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(15,22,35,0.8);
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
       max-width: 90vw;
+      max-height: 70vh;
     }
     .cell {
+      width: 100%;
       aspect-ratio: 1;
-      min-width: 32px;
-      background: linear-gradient(145deg, #374151 0%, #4b5563 100%);
+      min-width: 28px;
+      min-height: 28px;
+      background: linear-gradient(145deg, #2d3748, #1a202c);
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 1.1rem;
+      font-weight: bold;
+      font-size: 1.2rem;
       cursor: pointer;
       user-select: none;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 3px rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.1);
     }
     .cell:hover:not(.revealed):not(.flagged) {
-      transform: translateY(-3px) scale(1.08);
-      box-shadow: 0 12px 35px rgba(0,212,255,0.25);
-      border-color: rgba(0,212,255,0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(96,165,250,0.3);
     }
     .cell.revealed {
-      background: linear-gradient(145deg, #4b5563, #6b7280);
-      box-shadow: inset 0 4px 15px rgba(0,0,0,0.5);
-      transform: scale(0.97);
-      border-color: rgba(255,255,255,0.1);
+      background: #1a202c;
+      box-shadow: inset 0 4px 12px rgba(0,0,0,0.5);
     }
-    .cell.flagged {
-      background: linear-gradient(145deg, #f59e0b, #d97706) !important;
-      box-shadow: 0 6px 20px rgba(245,158,11,0.4);
-    }
-    .cell.flagged::before {
-      content: '🚩';
-      font-size: 1.4rem;
-    }
-    .cell.mine {
-      background: linear-gradient(145deg, #ef4444, #dc2626) !important;
-      animation: explode 0.7s ease infinite;
-      box-shadow: 0 0 30px rgba(239,68,68,0.8) !important;
-    }
-    @keyframes explode {
-      0%, 100% { transform: scale(1) rotate(0deg); }
-      25% { transform: scale(1.15) rotate(5deg); }
-      75% { transform: scale(1.15) rotate(-5deg); }
-    }
-    .num1 { color: #3b82f6; }
-    .num2 { color: #10b981; }
-    .num3 { color: #ef4444; }
-    .num4 { color: #8b5cf6; }
-    .num5 { color: #dc2626; }
+    .cell.flagged::before { content: '🚩'; font-size: 1.4rem; }
+    .cell.mine { background: #ef4444; animation: explode 0.6s; }
+    @keyframes explode { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+    .num1 { color: #60a5fa; }
+    .num2 { color: #34d399; }
+    .num3 { color: #f87171; }
+    .num4 { color: #a78bfa; }
+    .num5 { color: #ef4444; }
     .num6 { color: #06b6d4; }
-    .num7 { color: #1f2937; background: #f3f4f6 !important; }
-    .num8 { color: #6b7280; }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(10,14,23,0.95);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      backdrop-filter: blur(25px);
+    .num7 { color: #e5e7eb; }
+    .num8 { color: #9ca3af; }
+    #hintText {
+      margin-top: 1rem;
+      color: #94a3b8;
+      font-size: 0.9rem;
     }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(10,20,40,0.95); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(20px); }
     .modal.show { display: flex; }
     .modal-content {
-      background: linear-gradient(145deg, #1e293b, #334155);
-      padding: 3rem 2.5rem;
-      border-radius: 3rem;
+      background: #1a202c;
+      padding: 3rem;
+      border-radius: 2rem;
       text-align: center;
-      max-width: 550px;
-      box-shadow: 0 50px 120px rgba(0,0,0,0.7);
-      border: 1px solid rgba(255,255,255,0.08);
-      animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    @keyframes modalPop {
-      0% { transform: scale(0.6) rotateX(20deg); opacity: 0; }
-      100% { transform: scale(1) rotateX(0deg); opacity: 1; }
-    }
-    .modal h2 {
-      font-size: 2.2rem;
-      background: linear-gradient(45deg, #00d4ff, #5a67d8);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
-    }
-    .modal p {
-      font-size: 1.15rem;
-      line-height: 1.6;
-      margin-bottom: 2rem;
-      opacity: 0.95;
+      max-width: 90%;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
     }
     .modal button {
-      background: linear-gradient(145deg, #10b981, #047857);
-      margin: 0.75rem;
-      padding: 1rem 2.5rem;
-      border-radius: 2.5rem;
-      border: none;
-      color: white;
-      font-weight: 700;
-      font-size: 1rem;
+      background: #34d399;
+      padding: 1rem 2rem;
+      border-radius: 2rem;
+      margin: 1rem;
+      font-weight: bold;
       cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 8px 25px rgba(16,185,129,0.3);
     }
-    .modal button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 40px rgba(16,185,129,0.5);
-    }
-    .slider-container {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin: 1.5rem 0;
-    }
-    .slider-label {
-      font-weight: 600;
-      min-width: 120px;
-    }
-    .slider {
-      flex: 1;
-      height: 8px;
-      border-radius: 4px;
-      background: #475569;
-      outline: none;
-      -webkit-appearance: none;
-    }
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: linear-gradient(145deg, #10b981, #047857);
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(16,185,129,0.4);
-    }
-    #board.shake {
-      animation: shake 0.6s ease-in-out;
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0) rotate(0deg); }
-      20% { transform: translateX(-12px) rotate(-1deg); }
-      40% { transform: translateX(12px) rotate(1deg); }
-      60% { transform: translateX(-8px) rotate(-0.5deg); }
-      80% { transform: translateX(8px) rotate(0.5deg); }
-    }
-    .stars { font-size: 2rem; margin: 1rem 0; }
-    .level-info { font-size: 1.2rem; margin-bottom: 1rem; opacity: 0.9; }
   </style>
 </head>
 <body>
-  <div id="gameContainer">
-    <div id="mainMenu">
-      <h1>Minesweeper<br><span style="font-size: 0.6em; opacity: 0.8;">Infinite Edition</span></h1>
-      <div class="menu-grid">
-        <button id="playBtn" class="menu-button">▶ Play</button>
-        <button id="selectLevelBtn" class="menu-button">🏆 Select Level</button>
-        <button id="statsBtn" class="menu-button">📊 Statistics</button>
-        <button id="optionsBtn" class="menu-button">⚙ Options</button>
-      </div>
-      <p id="hint">Right click to place flags 🚩</p>
-    </div>
+  <header>
+    <div class="icon-btn">🏠</div>
+    <div>MINESWEEPER</div>
+    <div class="icon-btn">↺</div>
+    <div class="icon-btn">📊</div>
+    <div class="icon-btn">⚙</div>
+  </header>
 
-    <div id="gameScreen">
-      <div id="header">
-        <div class="stat">🏆 <span id="levelNum">1</span></div>
-        <div class="stat">💣 <span id="minesNum">10</span></div>
-        <div class="stat">🚩 <span id="flagsLeft">10</span></div>
-        <div class="stat">⏱ <span id="timer">00:00</span></div>
-      </div>
-      <div id="board"></div>
-    </div>
+  <div id="statsBar">
+    <div class="stat-item"><span class="stat-icon level-icon">🏆</span> LEVEL <span id="level">1</span></div>
+    <div class="stat-item"><span class="stat-icon mines-icon">💣</span> MINES <span id="mines">10</span></div>
+    <div class="stat-item"><span class="stat-icon flags-icon">🚩</span> FLAGS <span id="flags">10</span></div>
+    <div class="stat-item"><span class="stat-icon time-icon">⏱</span> TIME <span id="timer">00:00</span></div>
   </div>
 
-  <!-- Modals -->
-  <div id="loginModal" class="modal">
-    <div class="modal-content">
-      <h2>Sign In</h2>
-      <input type="text" id="usernameInput" placeholder="Enter your name" style="width: 100%; padding: 1rem; border-radius: 2rem; border: 1px solid rgba(255,255,255,0.2); background: #334155; color: white; font-size: 1rem; margin-bottom: 1.5rem; text-align: center;">
-      <button onclick="loginUser()">Login</button>
-    </div>
+  <div id="boardContainer">
+    <div id="board"></div>
   </div>
 
-  <div id="loreModal" class="modal">
-    <div class="modal-content">
-      <div style="font-size: 4rem; margin-bottom: 1rem;">🛡️</div>
-      <h2 id="loreTitle">The Beginning</h2>
-      <p id="loreText">You are a bomb defusal expert recruited for a dangerous mission. Enemy forces have planted mines across strategic territories. Your mission: clear them all!</p>
-      <button id="continueBtn">Continue →</button>
-    </div>
-  </div>
-
-  <div id="winModal" class="modal">
-    <div class="modal-content">
-      <h2>Level Complete!</h2>
-      <div class="stars">⭐⭐⭐</div>
-      <p class="level-info" id="winLevelInfo">Level 1 completed</p>
-      <p style="font-size: 1.5rem; font-weight: 700; color: #10b981; margin-bottom: 2rem;" id="winTimeInfo">0:04</p>
-      <button onclick="nextLevel()">Next Level →</button>
-      <button onclick="goToMainMenu()">🏠 Main Menu</button>
-    </div>
-  </div>
-
-  <div id="loseModal" class="modal">
-    <div class="modal-content">
-      <h2>💥 BOOM!</h2>
-      <p style="font-size: 1.3rem; margin-bottom: 2rem;">Mission Failed</p>
-      <button onclick="restartCurrentLevel()">Retry</button>
-      <button onclick="goToMainMenu()">🏠 Main Menu</button>
-    </div>
-  </div>
-
-  <div id="optionsModal" class="modal">
-    <div class="modal-content">
-      <h2>Options</h2>
-      <div class="slider-container">
-        <span class="slider-label">Sound</span>
-        <input type="range" id="soundSlider" class="slider" min="0" max="1" step="0.1" value="0.5">
-      </div>
-      <div class="slider-container">
-        <span class="slider-label">Music</span>
-        <input type="range" id="musicSlider" class="slider" min="0" max="1" step="0.1" value="0.5">
-      </div>
-      <button onclick="closeOptions()">Close</button>
-    </div>
-  </div>
-
-  <div id="statsModal" class="modal">
-    <div class="modal-content">
-      <h2>📊 Global Statistics</h2>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 2rem 0;">
-        <div class="stat">🎮 Games Played <span id="globalGames">0</span></div>
-        <div class="stat">👥 Players <span>42</span></div>
-        <div class="stat">⏱ Avg Time <span>0:22</span></div>
-      </div>
-      <div id="levelStats" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
-      <button onclick="closeStats()">Close</button>
-    </div>
-  </div>
-
-  <div id="selectLevelModal" class="modal">
-    <div class="modal-content">
-      <h2>Select Level</h2>
-      <div id="levelButtons" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; margin: 1.5rem 0; max-height: 400px; overflow-y: auto;"></div>
-      <button onclick="closeSelectLevel()">Close</button>
-    </div>
-  </div>
+  <p id="hintText">Left click: reveal • Right click: flag</p>
 
   <script>
-    // Game State
+    let rows = 9, cols = 9, mines = 10;
     let board = [];
-    let rows, cols, mines;
-    let currentLevel = 1;
     let gameOver = false;
-    let gameStarted = false;
+    let firstClick = true;
     let timer = 0;
     let timerInterval;
     let flagsUsed = 0;
-    let revealedCount = 0;
-    let totalSafe = 0;
-    let isBossLevel = false;
-    let audioCtx;
-    let musicOsc;
-    let username = localStorage.getItem('msUsername') || '';
-    let soundVol = 0.5;
-    let musicVol = 0.5;
+    let revealed = 0;
 
-    // Audio Init
-    function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    function playSound(freq, duration = 0.15, type = 'sine', vol = soundVol) {
-      if (vol <= 0) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(vol * 0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    }
-
-    function playExplosion() {
-      for (let i = 0; i < 6; i++) {
-        setTimeout(() => playSound(80 + Math.random() * 200, 0.4, 'sawtooth'), i * 60);
-      }
-    }
-
-    function startBackgroundMusic() {
-      if (musicVol <= 0) return;
-      const melody = [220, 261.63, 329.63, 392, 523.25];
-      let idx = 0;
-      const interval = setInterval(() => {
-        playSound(melody[idx % melody.length], 0.6, 'triangle', musicVol * 0.15);
-        idx++;
-      }, 800);
-      musicOsc = interval;
-    }
-
-    function stopBackgroundMusic() {
-      if (musicOsc) {
-        clearInterval(musicOsc);
-        musicOsc = null;
-      }
-    }
-
-    // UI Elements
-    const mainMenuEl = document.getElementById('mainMenu');
-    const gameScreenEl = document.getElementById('gameScreen');
     const boardEl = document.getElementById('board');
-    const levelEl = document.getElementById('levelNum');
-    const minesEl = document.getElementById('minesNum');
-    const flagsEl = document.getElementById('flagsLeft');
+    const levelEl = document.getElementById('level');
+    const minesEl = document.getElementById('mines');
+    const flagsEl = document.getElementById('flags');
     const timerEl = document.getElementById('timer');
 
-    function showModal(id) {
-      document.getElementById(id).classList.add('show');
-    }
-
-    function hideModal(id) {
-      document.getElementById(id).classList.remove('show');
-    }
-
-    // Level Config - Progressive Difficulty
-    function getLevelConfig(level) {
-      const baseSize = 8 + Math.floor((level - 1) / 3); // Grows ~8x8 to ~30x30 at lvl 50
-      const baseDensity = 0.13 + (level - 1) * 0.0015; // Slight increase
-      let mineCount = Math.floor(baseSize * baseSize * baseDensity);
-      mineCount = Math.max(10, Math.min(mineCount, baseSize * baseSize * 0.25));
-      isBossLevel = level % 10 === 0;
-      if (isBossLevel) {
-        mineCount = Math.floor(mineCount * 1.8); // Boss: 80% more mines
-      }
-      return { rows: baseSize, cols: baseSize, mines: mineCount };
-    }
-
-    // Create Board
-    function createBoard() {
-      const config = getLevelConfig(currentLevel);
-      rows = config.rows;
-      cols = config.cols;
-      mines = config.mines;
-      boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    function initBoard() {
       boardEl.innerHTML = '';
-      board = Array(rows).fill().map(() => Array(cols).fill({ revealed: false, flagged: false, mine: false, adj: 0 }));
+      board = [];
+      flagsUsed = 0;
+      revealed = 0;
+      gameOver = false;
+      firstClick = true;
+      stopTimer();
+      timer = 0;
+      timerEl.textContent = '00:00';
+      boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
       for (let r = 0; r < rows; r++) {
+        board[r] = [];
         for (let c = 0; c < cols; c++) {
           const cell = document.createElement('div');
-          cell.className = 'cell';
+          cell.classList.add('cell');
           cell.dataset.r = r;
           cell.dataset.c = c;
-          cell.addEventListener('click', onCellClick);
-          cell.addEventListener('contextmenu', onCellRightClick);
+          cell.addEventListener('click', handleLeftClick);
+          cell.addEventListener('contextmenu', handleRightClick);
           boardEl.appendChild(cell);
+          board[r][c] = { mine: false, revealed: false, flagged: false, adj: 0 };
         }
       }
       minesEl.textContent = mines;
       flagsEl.textContent = mines;
-      levelEl.textContent = currentLevel;
-      gameOver = false;
-      gameStarted = false;
-      flagsUsed = 0;
-      revealedCount = 0;
-      timer = 0;
-      timerEl.textContent = '00:00';
-      stopTimer();
     }
 
-    // Mine Generation & Numbers
     function placeMines(excludeR, excludeC) {
       let placed = 0;
       while (placed < mines) {
         const r = Math.floor(Math.random() * rows);
         const c = Math.floor(Math.random() * cols);
-        if (r === excludeR && c === excludeC) continue;
-        if (board[r][c].mine) continue;
+        if (board[r][c].mine || (r === excludeR && c === excludeC)) continue;
         board[r][c].mine = true;
         placed++;
       }
-      // Calculate adjacent
+      calculateNumbers();
+    }
+
+    function calculateNumbers() {
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           if (board[r][c].mine) continue;
           let count = 0;
           for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
+              if (dr === 0 && dc === 0) continue;
               const nr = r + dr, nc = c + dc;
               if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc].mine) count++;
             }
@@ -500,259 +223,96 @@
           board[r][c].adj = count;
         }
       }
-      totalSafe = rows * cols - mines;
     }
 
-    // Reveal
-    function reveal(r, c) {
-      if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c].revealed || board[r][c].flagged) return;
-      const cellEl = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-      board[r][c].revealed = true;
-      cellEl.classList.add('revealed');
-      revealedCount++;
-      if (board[r][c].adj > 0) {
-        cellEl.textContent = board[r][c].adj;
-        cellEl.classList.add(`num${board[r][c].adj}`);
-        playSound(300 + board[r][c].adj * 100, 0.1);
-      } else {
-        // Flood fill
-        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) reveal(r + dr, c + dc);
-      }
-    }
-
-    function onCellClick(e) {
+    function handleLeftClick(e) {
       if (gameOver) return;
       const r = parseInt(e.target.dataset.r);
       const c = parseInt(e.target.dataset.c);
-      if (board[r][c].flagged) return;
-      if (!gameStarted) {
-        gameStarted = true;
+      if (board[r][c].flagged || board[r][c].revealed) return;
+      if (firstClick) {
+        firstClick = false;
         placeMines(r, c);
         startTimer();
-        startBackgroundMusic();
       }
+      revealCell(r, c);
       if (board[r][c].mine) {
         gameOver = true;
         e.target.classList.add('mine');
-        playExplosion();
+        revealAllMines();
         boardEl.classList.add('shake');
-        setTimeout(() => showModal('loseModal'), 800);
-        revealMines();
-        return;
       }
-      reveal(r, c);
       checkWin();
     }
 
-    function onCellRightClick(e) {
+    function handleRightClick(e) {
       e.preventDefault();
-      if (gameOver || !gameStarted || flagsUsed >= mines) return;
+      if (gameOver || firstClick) return;
       const r = parseInt(e.target.dataset.r);
       const c = parseInt(e.target.dataset.c);
       if (board[r][c].revealed) return;
       board[r][c].flagged = !board[r][c].flagged;
-      const cellEl = e.target;
-      if (board[r][c].flagged) {
-        cellEl.classList.add('flagged');
-        flagsUsed++;
-        playSound(800, 0.08, 'square');
-      } else {
-        cellEl.classList.remove('flagged');
-        flagsUsed--;
-      }
+      e.target.classList.toggle('flagged');
+      flagsUsed += board[r][c].flagged ? 1 : -1;
       flagsEl.textContent = mines - flagsUsed;
       checkWin();
     }
 
-    function revealMines() {
+    function revealCell(r, c) {
+      if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c].revealed || board[r][c].flagged) return;
+      board[r][c].revealed = true;
+      const cell = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+      cell.classList.add('revealed');
+      revealed++;
+      if (board[r][c].adj > 0) {
+        cell.textContent = board[r][c].adj;
+        cell.classList.add(`num${board[r][c].adj}`);
+      } else {
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            revealCell(r + dr, c + dc);
+          }
+        }
+      }
+    }
+
+    function revealAllMines() {
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
           if (board[r][c].mine) {
-            const cellEl = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-            cellEl.classList.add('mine');
-            cellEl.textContent = '💣';
+            const cell = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+            cell.classList.add('mine');
+            cell.textContent = '💣';
           }
         }
       }
     }
 
     function checkWin() {
-      let correctFlags = 0;
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (board[r][c].mine && board[r][c].flagged) correctFlags++;
-        }
-      }
-      if (isBossLevel) {
-        if (correctFlags === mines) winLevel();
-      } else if (revealedCount >= totalSafe) {
-        winLevel();
+      if (gameOver) return;
+      const safeCells = rows * cols - mines;
+      if (revealed >= safeCells) {
+        gameOver = true;
+        stopTimer();
+        alert('You Win! 🎉');
       }
     }
 
-    function winLevel() {
-      gameOver = true;
-      stopTimer();
-      stopBackgroundMusic();
-      playSound(523, 0.2);
-      playSound(659, 0.2);
-      playSound(784, 0.4);
-      saveScore();
-      document.getElementById('winLevelInfo').textContent = `Level ${currentLevel} completed`;
-      document.getElementById('winTimeInfo').textContent = timerEl.textContent;
-      setTimeout(() => showModal('winModal'), 500);
-    }
-
-    // Timer
     function startTimer() {
       timerInterval = setInterval(() => {
         timer++;
-        const m = Math.floor(timer / 60).toString().padStart(1, '0');
-        const s = (timer % 60).toString().padStart(2, '0');
-        timerEl.textContent = `${m}:${s}`;
+        const mins = String(Math.floor(timer / 60)).padStart(2, '0');
+        const secs = String(timer % 60).padStart(2, '0');
+        timerEl.textContent = `${mins}:${secs}`;
       }, 1000);
     }
 
     function stopTimer() {
-      if (timerInterval) clearInterval(timerInterval);
+      clearInterval(timerInterval);
     }
 
-    // Leaderboards & Stats
-    function saveScore() {
-      const scores = JSON.parse(localStorage.getItem('msScores') || '[]');
-      scores.push({ level: currentLevel, time: timer, user: username });
-      localStorage.setItem('msScores', JSON.stringify(scores));
-      updateGlobalStats();
-    }
-
-    function updateGlobalStats() {
-      const stats = JSON.parse(localStorage.getItem('msStats') || '{"games": 0}');
-      stats.games = (stats.games || 0) + 1;
-      localStorage.setItem('msStats', JSON.stringify(stats));
-      document.getElementById('globalGames').textContent = stats.games;
-    }
-
-    function updateLevelStats() {
-      const scores = JSON.parse(localStorage.getItem('msScores') || '[]');
-      const levelStats = {};
-      scores.forEach(s => {
-        if (!levelStats[s.level]) levelStats[s.level] = [];
-        levelStats[s.level].push(s);
-      });
-      let html = '';
-      Object.keys(levelStats).sort((a,b) => a - b).slice(-5).reverse().forEach(lvl => {
-        const best = levelStats[lvl].sort((a,b) => a.time - b.time)[0];
-        const m = Math.floor(best.time / 60).toString().padStart(1, '0');
-        const s = (best.time % 60).toString().padStart(2, '0');
-        html += `<div class="stat" style="justify-content: center; margin: 0.5rem;">Level ${lvl} <span style="color: #10b981;">${m}:${s}</span> by ${best.user}</div>`;
-      });
-      document.getElementById('levelStats').innerHTML = html || '<p style="opacity: 0.7;">No records yet</p>';
-    }
-
-    // Event Handlers
-    document.getElementById('playBtn').onclick = () => {
-      if (!username) return showModal('loginModal');
-      currentLevel = 1;
-      showLore();
-      mainMenuEl.style.display = 'none';
-      gameScreenEl.style.display = 'block';
-    };
-
-    document.getElementById('selectLevelBtn').onclick = () => {
-      if (!username) return showModal('loginModal');
-      let html = '';
-      for (let i = 1; i <= 50; i++) {
-        html += `<button class="menu-button" style="padding: 0.8rem; font-size: 1rem; min-width: unset;" onclick="loadLevel(${i})">Lv ${i}</button>`;
-      }
-      document.getElementById('levelButtons').innerHTML = html;
-      showModal('selectLevelModal');
-    };
-
-    document.getElementById('statsBtn').onclick = () => {
-      updateLevelStats();
-      updateGlobalStats();
-      showModal('statsModal');
-    };
-
-    document.getElementById('optionsBtn').onclick = () => showModal('optionsModal');
-
-    document.getElementById('continueBtn').onclick = () => {
-      hideModal('loreModal');
-      createBoard();
-    };
-
-    window.loginUser = () => {
-      username = document.getElementById('usernameInput').value.trim() || 'Anonymous';
-      localStorage.setItem('msUsername', username);
-      hideModal('loginModal');
-      document.getElementById('playBtn').click();
-    };
-
-    window.nextLevel = () => {
-      hideModal('winModal');
-      currentLevel++;
-      if (currentLevel > 50) {
-        alert('🎉 You completed all 50 levels! You are a legend!');
-        goToMainMenu();
-        return;
-      }
-      showLore();
-    };
-
-    window.restartCurrentLevel = () => {
-      hideModal('loseModal');
-      showLore();
-    };
-
-    window.loadLevel = (lvl) => {
-      currentLevel = lvl;
-      hideModal('selectLevelModal');
-      showLore();
-      mainMenuEl.style.display = 'none';
-      gameScreenEl.style.display = 'block';
-    };
-
-    window.goToMainMenu = () => {
-      hideModal('winModal');
-      hideModal('loseModal');
-      mainMenuEl.style.display = 'flex';
-      gameScreenEl.style.display = 'none';
-      stopTimer();
-      stopBackgroundMusic();
-      boardEl.classList.remove('shake');
-    };
-
-    window.closeOptions = () => {
-      soundVol = parseFloat(document.getElementById('soundSlider').value);
-      musicVol = parseFloat(document.getElementById('musicSlider').value);
-      hideModal('optionsModal');
-    };
-
-    window.closeStats = () => hideModal('statsModal');
-    window.closeSelectLevel = () => hideModal('selectLevelModal');
-
-    function showLore() {
-      const lore = {
-        1: "The Beginning: You are recruited for your first mission.",
-        10: "Boss Fight: Lieutenant Boomguard awaits!",
-        20: "Boss Fight: Captain Detonix strikes back!",
-        30: "Boss Fight: General Explosaro's fortress!",
-        40: "Boss Fight: Supreme Overlord Kaboom!",
-        50: "Final Boss: Apocalypse Mineheart - Flag all to win the war!"
-      };
-      if (lore[currentLevel]) {
-        document.getElementById('loreTitle').textContent = Object.keys(lore).includes(currentLevel.toString()) ? lore[currentLevel] : `Level ${currentLevel}`;
-        document.getElementById('loreText').textContent = isBossLevel ? "Higher mine density! Flag EVERY mine to defeat the boss!" : "Clear all safe tiles.";
-        showModal('loreModal');
-      } else {
-        createBoard();
-      }
-    }
-
-    // Init
-    initAudio();
-    updateGlobalStats();
-    updateLevelStats();
+    // Start game
+    initBoard();
   </script>
 </body>
 </html>
