@@ -3,316 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minesweeper</title>
+  <title>Infinite Minesweeper</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      height: 100vh;
-      background: #0d1421;
-      color: #e2e8f0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow: hidden;
-    }
-    header {
-      width: 100%;
-      padding: 1rem;
-      background: rgba(13,20,33,0.9);
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      backdrop-filter: blur(10px);
-    }
-    .icon-btn { cursor: pointer; font-size: 1.4rem; padding: 0.5rem; }
-    #statsBar {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      background: rgba(15,22,35,0.95);
-      padding: 0.8rem 1.5rem;
-      border-radius: 2rem;
-      margin: 1rem 0;
-      font-weight: 600;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      flex-wrap: wrap;
-    }
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      min-width: 120px;
-    }
-    .stat-icon { font-size: 1.4rem; }
-    .level-icon { color: #34d399; }
-    .mines-icon { color: #f87171; }
-    .flags-icon { color: #fbbf24; }
-    .time-icon { color: #60a5fa; }
-    #boardContainer {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-    }
-    #board {
-      display: grid;
-      gap: 6px;
-      padding: 1.5rem;
-      background: rgba(15,22,35,0.8);
-      border-radius: 1.5rem;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      max-width: 90vw;
-      max-height: 70vh;
-    }
-    .cell {
-      width: 100%;
-      aspect-ratio: 1;
-      min-width: 28px;
-      min-height: 28px;
-      background: linear-gradient(145deg, #2d3748, #1a202c);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.1);
-    }
-    .cell:hover:not(.revealed):not(.flagged) {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 30px rgba(96,165,250,0.3);
-    }
-    .cell.revealed {
-      background: #1a202c;
-      box-shadow: inset 0 4px 12px rgba(0,0,0,0.5);
-    }
-    .cell.flagged::before { content: '🚩'; font-size: 1.4rem; }
-    .cell.mine { background: #ef4444; animation: explode 0.6s; }
-    @keyframes explode { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); } }
-    .num1 { color: #60a5fa; }
-    .num2 { color: #34d399; }
-    .num3 { color: #f87171; }
-    .num4 { color: #a78bfa; }
-    .num5 { color: #ef4444; }
-    .num6 { color: #06b6d4; }
-    .num7 { color: #e5e7eb; }
-    .num8 { color: #9ca3af; }
-    #hintText {
-      margin-top: 1rem;
-      color: #94a3b8;
-      font-size: 0.9rem;
-    }
-    .modal { display: none; position: fixed; inset: 0; background: rgba(10,20,40,0.95); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(20px); }
-    .modal.show { display: flex; }
-    .modal-content {
-      background: #1a202c;
-      padding: 3rem;
-      border-radius: 2rem;
-      text-align: center;
-      max-width: 90%;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-    }
-    .modal button {
-      background: #34d399;
-      padding: 1rem 2rem;
-      border-radius: 2rem;
-      margin: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    body { background: #121212; color: #aaa; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 20px; }
+    h1 { color: #fff; }
+    #game { margin: 20px auto; display: inline-block; }
+    table { border-collapse: collapse; margin: 20px auto; background: #333; }
+    td { width: 30px; height: 30px; border: 1px solid #555; text-align: center; font-weight: bold; cursor: pointer; background: #222; }
+    td.revealed { background: #444; }
+    td.flag { background: #222 url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAADqAAAAA7pVsrAAAAAElFTkSuQmCC') no-repeat center; }
+    td.mine { background: #f00; color: #fff; }
+    .num1 { color: #00f; }
+    .num2 { color: #0f0; }
+    .num3 { color: #f00; }
+    .num4 { color: #00c; }
+    .num5 { color: #c00; }
+    .num6 { color: #0cc; }
+    .num7 { color: #000; }
+    .num8 { color: #888; }
+    #info { margin: 10px; font-size: 1.2em; }
+    button { padding: 10px 20px; margin: 10px; font-size: 1em; cursor: pointer; }
   </style>
 </head>
 <body>
-  <header>
-    <div class="icon-btn">🏠</div>
-    <div>MINESWEEPER</div>
-    <div class="icon-btn">↺</div>
-    <div class="icon-btn">📊</div>
-    <div class="icon-btn">⚙</div>
-  </header>
-
-  <div id="statsBar">
-    <div class="stat-item"><span class="stat-icon level-icon">🏆</span> LEVEL <span id="level">1</span></div>
-    <div class="stat-item"><span class="stat-icon mines-icon">💣</span> MINES <span id="mines">10</span></div>
-    <div class="stat-item"><span class="stat-icon flags-icon">🚩</span> FLAGS <span id="flags">10</span></div>
-    <div class="stat-item"><span class="stat-icon time-icon">⏱</span> TIME <span id="timer">00:00</span></div>
-  </div>
-
-  <div id="boardContainer">
-    <div id="board"></div>
-  </div>
-
-  <p id="hintText">Left click: reveal • Right click: flag</p>
+  <h1>Infinite Minesweeper</h1>
+  <div id="info">Level: <span id="level">1</span> | Mines: <span id="mines">10</span> | Flags: <span id="flags">0</span> | Time: <span id="timer">0</span>s</div>
+  <div id="game"><table id="board"></table></div>
+  <button onclick="newGame()">New Game</button>
+  <p>Left click to reveal • Right click to flag</p>
 
   <script>
-    let rows = 9, cols = 9, mines = 10;
+    let size = 9;
+    let mines = 10;
+    let level = 1;
     let board = [];
-    let gameOver = false;
-    let firstClick = true;
-    let timer = 0;
-    let timerInterval;
-    let flagsUsed = 0;
     let revealed = 0;
+    let flags = 0;
+    let gameOver = false;
+    let timer = 0;
+    let interval;
 
-    const boardEl = document.getElementById('board');
-    const levelEl = document.getElementById('level');
-    const minesEl = document.getElementById('mines');
-    const flagsEl = document.getElementById('flags');
-    const timerEl = document.getElementById('timer');
+    function newGame() {
+      level = 1;
+      size = 9;
+      mines = 10;
+      createBoard();
+      updateInfo();
+    }
 
-    function initBoard() {
-      boardEl.innerHTML = '';
-      board = [];
-      flagsUsed = 0;
-      revealed = 0;
+    function createBoard() {
       gameOver = false;
-      firstClick = true;
-      stopTimer();
+      revealed = 0;
+      flags = 0;
       timer = 0;
-      timerEl.textContent = '00:00';
-      boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-      for (let r = 0; r < rows; r++) {
-        board[r] = [];
-        for (let c = 0; c < cols; c++) {
-          const cell = document.createElement('div');
-          cell.classList.add('cell');
-          cell.dataset.r = r;
-          cell.dataset.c = c;
-          cell.addEventListener('click', handleLeftClick);
-          cell.addEventListener('contextmenu', handleRightClick);
-          boardEl.appendChild(cell);
-          board[r][c] = { mine: false, revealed: false, flagged: false, adj: 0 };
+      clearInterval(interval);
+      interval = setInterval(() => timer++, 1000);
+      const tb = document.getElementById('board');
+      tb.innerHTML = '';
+      board = Array.from({length: size}, () => Array(size).fill(0));
+      for (let i = 0; i < mines; i++) {
+        let r, c;
+        do {
+          r = Math.floor(Math.random() * size);
+          c = Math.floor(Math.random() * size);
+        } while (board[r][c] === 'M');
+        board[r][c] = 'M';
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size && board[nr][nc] !== 'M') board[nr][nc]++;
         }
       }
-      minesEl.textContent = mines;
-      flagsEl.textContent = mines;
-    }
-
-    function placeMines(excludeR, excludeC) {
-      let placed = 0;
-      while (placed < mines) {
-        const r = Math.floor(Math.random() * rows);
-        const c = Math.floor(Math.random() * cols);
-        if (board[r][c].mine || (r === excludeR && c === excludeC)) continue;
-        board[r][c].mine = true;
-        placed++;
-      }
-      calculateNumbers();
-    }
-
-    function calculateNumbers() {
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (board[r][c].mine) continue;
-          let count = 0;
-          for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-              if (dr === 0 && dc === 0) continue;
-              const nr = r + dr, nc = c + dc;
-              if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc].mine) count++;
-            }
-          }
-          board[r][c].adj = count;
+      for (let r = 0; r < size; r++) {
+        const tr = tb.insertRow();
+        for (let c = 0; c < size; c++) {
+          const td = tr.insertCell();
+          td.onmousedown = e => handleClick(r, c, e.button);
+          td.oncontextmenu = e => e.preventDefault();
         }
       }
+      updateInfo();
     }
 
-    function handleLeftClick(e) {
+    function handleClick(r, c, button) {
       if (gameOver) return;
-      const r = parseInt(e.target.dataset.r);
-      const c = parseInt(e.target.dataset.c);
-      if (board[r][c].flagged || board[r][c].revealed) return;
-      if (firstClick) {
-        firstClick = false;
-        placeMines(r, c);
-        startTimer();
+      const td = document.querySelector(`#board tr:nth-child(${r+1}) td:nth-child(${c+1})`);
+      if (td.classList.contains('revealed') || td.classList.contains('flag')) return;
+      if (button === 2) { // Right click
+        td.classList.toggle('flag');
+        flags += td.classList.contains('flag') ? 1 : -1;
+        updateInfo();
+        checkWin();
+        return;
       }
-      revealCell(r, c);
-      if (board[r][c].mine) {
-        gameOver = true;
-        e.target.classList.add('mine');
-        revealAllMines();
-        boardEl.classList.add('shake');
-      }
-      checkWin();
-    }
-
-    function handleRightClick(e) {
-      e.preventDefault();
-      if (gameOver || firstClick) return;
-      const r = parseInt(e.target.dataset.r);
-      const c = parseInt(e.target.dataset.c);
-      if (board[r][c].revealed) return;
-      board[r][c].flagged = !board[r][c].flagged;
-      e.target.classList.toggle('flagged');
-      flagsUsed += board[r][c].flagged ? 1 : -1;
-      flagsEl.textContent = mines - flagsUsed;
-      checkWin();
-    }
-
-    function revealCell(r, c) {
-      if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c].revealed || board[r][c].flagged) return;
-      board[r][c].revealed = true;
-      const cell = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-      cell.classList.add('revealed');
+      // Left click
+      td.classList.add('revealed');
       revealed++;
-      if (board[r][c].adj > 0) {
-        cell.textContent = board[r][c].adj;
-        cell.classList.add(`num${board[r][c].adj}`);
-      } else {
-        for (let dr = -1; dr <= 1; dr++) {
-          for (let dc = -1; dc <= 1; dc++) {
-            revealCell(r + dr, c + dc);
-          }
-        }
+      if (board[r][c] === 'M') {
+        td.classList.add('mine');
+        td.textContent = '💣';
+        gameOver = true;
+        clearInterval(interval);
+        alert('Game Over!');
+        return;
       }
+      if (board[r][c] > 0) td.textContent = board[r][c];
+      td.classList.add(`num${board[r][c]}`);
+      if (board[r][c] === 0) floodReveal(r, c);
+      checkWin();
     }
 
-    function revealAllMines() {
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          if (board[r][c].mine) {
-            const cell = boardEl.querySelector(`[data-r="${r}"][data-c="${c}"]`);
-            cell.classList.add('mine');
-            cell.textContent = '💣';
-          }
+    function floodReveal(r, c) {
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+          const td = document.querySelector(`#board tr:nth-child(${nr+1}) td:nth-child(${nc+1})`);
+          if (td && !td.classList.contains('revealed') && !td.classList.contains('flag')) handleClick(nr, nc, 0);
         }
       }
     }
 
     function checkWin() {
-      if (gameOver) return;
-      const safeCells = rows * cols - mines;
-      if (revealed >= safeCells) {
+      if (revealed + mines === size * size) {
         gameOver = true;
-        stopTimer();
-        alert('You Win! 🎉');
+        clearInterval(interval);
+        alert('You Win! Proceeding to next level...');
+        level++;
+        size += 2; // Increase size
+        mines += Math.floor(level * 2); // Increase mines
+        createBoard();
       }
     }
 
-    function startTimer() {
-      timerInterval = setInterval(() => {
-        timer++;
-        const mins = String(Math.floor(timer / 60)).padStart(2, '0');
-        const secs = String(timer % 60).padStart(2, '0');
-        timerEl.textContent = `${mins}:${secs}`;
-      }, 1000);
+    function updateInfo() {
+      document.getElementById('level').textContent = level;
+      document.getElementById('mines').textContent = mines;
+      document.getElementById('flags').textContent = flags;
+      document.getElementById('timer').textContent = timer;
     }
 
-    function stopTimer() {
-      clearInterval(timerInterval);
-    }
-
-    // Start game
-    initBoard();
+    newGame();
   </script>
 </body>
 </html>
